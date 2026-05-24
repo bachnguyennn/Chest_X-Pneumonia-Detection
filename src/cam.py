@@ -99,10 +99,11 @@ def generate_gradcam(
     cam = GradCAM(model=model, target_layers=[target_layer])
 
     targets = [ClassifierOutputTarget(target_class)]
-    grayscale_cam = cam(
-        input_tensor=input_tensor,
-        targets=targets,
-    )
+    with torch.enable_grad():
+        grayscale_cam = cam(
+            input_tensor=input_tensor,
+            targets=targets,
+        )
     return grayscale_cam[0]
 
 
@@ -169,7 +170,6 @@ def plot_cam_comparison(
     return fig
 
 
-@torch.no_grad()
 def generate_cam_comparison(
     model: nn.Module,
     loader: DataLoader,
@@ -194,11 +194,12 @@ def generate_cam_comparison(
             label = labels[i].item()
             true_name = IDX_TO_CLASS[label]
 
-            outputs = model(img_tensor)
-            probs = torch.softmax(outputs, dim=1)[0]
-            pred_class = outputs.argmax(dim=1).item()
-            pred_name = IDX_TO_CLASS[pred_class]
-            confidence = probs[pred_class].item()
+            with torch.no_grad():
+                outputs = model(img_tensor)
+                probs = torch.softmax(outputs, dim=1)[0]
+                pred_class = outputs.argmax(dim=1).item()
+                pred_name = IDX_TO_CLASS[pred_class]
+                confidence = probs[pred_class].item()
 
             rgb = _tensor_to_rgb_uint8(images[i])
             gradcam = generate_gradcam(model, img_tensor, pred_class, backbone)
