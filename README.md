@@ -1,79 +1,148 @@
 # Interpretable Chest X-Ray Pneumonia Detection
 
-**Grad-CAM & Eigen-CAM Explainability · Transfer Learning · Medical AI**
+**Transfer Learning · Medical Computer Vision · Grad-CAM and Eigen-CAM Explainability**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> End-to-end computer vision pipeline that classifies chest X-rays as **Normal** or **Pneumonia**, with visual heatmaps showing exactly which lung regions drive each prediction.
+End-to-end deep learning project for classifying chest X-rays as **Normal** or **Pneumonia** using a ResNet50 transfer-learning model. The project emphasizes not only classification performance, but also interpretability through side-by-side **Grad-CAM** and **Eigen-CAM** heatmaps.
+
+> **Disclaimer:** This project is for research and education only. It is not validated, approved, or intended for clinical diagnosis.
 
 ---
 
-## Overview
+## Project Highlights
 
-Pneumonia is a leading cause of death worldwide. Deep learning models can assist radiologists, but **black-box predictions are not trustworthy in medicine**. This project prioritizes **interpretability** using **Grad-CAM** and **Eigen-CAM** heatmaps overlaid on original X-rays.
+| Area | Implementation |
+|------|----------------|
+| **Task** | Binary chest X-ray classification: Normal vs Pneumonia |
+| **Backbone** | ResNet50 with ImageNet transfer learning |
+| **Imbalance Handling** | Weighted sampler and weighted cross-entropy |
+| **Evaluation** | Accuracy, Precision, Recall, F1, PR-AUC, ROC-AUC |
+| **Explainability** | Grad-CAM and Eigen-CAM overlays on model predictions |
+| **Artifacts** | Saved checkpoint, metrics JSON, curves, CAM comparisons, failure cases |
 
-| Feature | Description |
-|---------|-------------|
-| **Backbone** | ResNet50 (primary) + EfficientNet-B0 (optional) |
-| **Imbalance** | Weighted sampler + weighted cross-entropy |
-| **Metrics** | F1, Precision, Recall, PR-AUC, ROC-AUC |
-| **Explainability** | Grad-CAM + Eigen-CAM side-by-side |
-| **Splits** | Official Kaggle train / val / test |
-
-> ⚠️ **Disclaimer:** For research and education only. **Not for clinical diagnosis.**
-
----
-
-## Sample Results
-
-*Run training and evaluation to generate figures in `reports/figures/`.*
-
-Each CAM comparison shows three panels side-by-side:
-
-```
-[ Original X-Ray ]  →  [ Grad-CAM Overlay ]  →  [ Eigen-CAM Overlay ]
-```
-
-**After training**, view heatmaps in:
-- `reports/figures/cam_comparisons/` — correct predictions
-- `reports/figures/failure_cases/` — false positives & false negatives
-- `reports/figures/confusion_matrix.png`
-- `reports/figures/precision_recall_curve.png`
+Pneumonia screening is a high-recall medical imaging task: missed pneumonia cases are more concerning than false alarms. For that reason, this project reports class-specific metrics and Precision-Recall behavior rather than relying on accuracy alone.
 
 ---
 
-## Quick Start
+## Results
 
-### Option A — GitHub + Colab GPU (recommended)
+Evaluation was run on the official Kaggle test split using the best saved ResNet50 checkpoint, `models/best_resnet50.pth`.
 
-No Google Drive needed for code. Open **`notebook/chest_xray_github_colab.ipynb`** on [Colab](https://colab.research.google.com) with a GPU runtime. Repo: [bachnguyennn/Chest_X-Pneumonia-Detection](https://github.com/bachnguyennn/Chest_X-Pneumonia-Detection).
+### Model Performance
 
-### Option B — Local
+| Metric | Value |
+|--------|------:|
+| Test Accuracy | **90.38%** |
+| Weighted Precision | **90.69%** |
+| Weighted Recall | **90.38%** |
+| Weighted F1-score | **90.20%** |
+| Macro Precision | **91.34%** |
+| Macro Recall | **88.21%** |
+| Macro F1-score | **89.38%** |
+| ROC-AUC | **96.51%** |
+| PR-AUC | **97.54%** |
 
-### 1. Clone & install
+### Class-Level Performance
 
-```bash
-cd chest_xray_pneumonia_detection
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+| Class | Precision | Recall | F1-score | Support |
+|-------|----------:|-------:|---------:|--------:|
+| Normal | **93.94%** | **79.49%** | **86.11%** | 234 |
+| Pneumonia | **88.73%** | **96.92%** | **92.65%** | 390 |
+
+### Confusion Matrix
+
+| Actual \ Predicted | Normal | Pneumonia |
+|--------------------|-------:|----------:|
+| Normal | 186 | 48 |
+| Pneumonia | 12 | 378 |
+
+The model correctly identifies most pneumonia cases, achieving **96.92% recall** on the Pneumonia class. The main tradeoff is a higher false-positive rate on Normal images, with 48 Normal X-rays flagged as Pneumonia.
+
+---
+
+## Evaluation Figures
+
+![Training and validation F1/loss curves for the ResNet50 pneumonia classifier, showing convergence over 15 epochs](reports/figures/training_curves.png)
+
+![Confusion matrix for the test split showing 186 true Normal predictions, 378 true Pneumonia predictions, 48 false positives, and 12 false negatives](reports/figures/confusion_matrix.png)
+
+![Precision-Recall curve for the Pneumonia class with high PR-AUC, demonstrating strong ranking performance under class imbalance](reports/figures/precision_recall_curve.png)
+
+![ROC curve for the Pneumonia classifier showing high discrimination between Normal and Pneumonia chest X-rays](reports/figures/roc_curve.png)
+
+---
+
+## Explainability
+
+Each CAM comparison contains three panels:
+
+```text
+Original X-ray | Grad-CAM overlay | Eigen-CAM overlay
 ```
 
-### 2. Download dataset
+Grad-CAM highlights class-discriminative regions using gradients, while Eigen-CAM projects the final convolutional activations onto their dominant component. Showing both helps check whether the model focuses on plausible lung regions instead of irrelevant borders, labels, or image artifacts.
 
-[Kaggle — Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)
+### Correct Prediction Heatmaps
 
-```bash
-# Requires Kaggle API credentials in ~/.kaggle/kaggle.json
-pip install kaggle
-python scripts/download_dataset.py
-```
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, showing model attention across lung-relevant regions](reports/figures/cam_comparisons/cam_00_NORMAL_pred_NORMAL.png)
 
-Expected layout:
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, illustrating visual evidence used for a Normal prediction](reports/figures/cam_comparisons/cam_01_NORMAL_pred_NORMAL.png)
 
-```
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, with attention concentrated in clinically relevant thoracic regions](reports/figures/cam_comparisons/cam_02_NORMAL_pred_NORMAL.png)
+
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, comparing gradient-based and activation-based explanations](reports/figures/cam_comparisons/cam_03_NORMAL_pred_NORMAL.png)
+
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, showing interpretable model focus for the predicted class](reports/figures/cam_comparisons/cam_04_NORMAL_pred_NORMAL.png)
+
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, supporting review of model attention patterns](reports/figures/cam_comparisons/cam_05_NORMAL_pred_NORMAL.png)
+
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, visualizing the regions driving the Normal classification](reports/figures/cam_comparisons/cam_06_NORMAL_pred_NORMAL.png)
+
+![Grad-CAM and Eigen-CAM heatmaps overlaid on a correctly classified Normal chest X-ray, providing side-by-side explainability for the prediction](reports/figures/cam_comparisons/cam_07_NORMAL_pred_NORMAL.png)
+
+---
+
+## Failure Case Analysis
+
+Failure cases are the most important examples to inspect in medical AI because they reveal where the model is likely to be unreliable.
+
+### False Negatives: Pneumonia Missed as Normal
+
+False negatives are clinically important because they represent pneumonia cases the model failed to flag. These examples may involve subtle opacities, mild disease presentation, overlapping anatomy, or image characteristics that make consolidation harder to distinguish.
+
+![False negative case where a pneumonia-positive chest X-ray was predicted as Normal, with Grad-CAM and Eigen-CAM overlays showing the model attention pattern behind the missed diagnosis](reports/figures/failure_cases/false_negative_0_PNEUMONIA_pred_NORMAL.png)
+
+![Second false negative case where a pneumonia-positive chest X-ray was predicted as Normal, illustrating a missed pneumonia example for model reliability review](reports/figures/failure_cases/false_negative_1_PNEUMONIA_pred_NORMAL.png)
+
+### False Positives: Normal Misclassified as Pneumonia
+
+False positives are less dangerous than false negatives in a screening context, but they can increase unnecessary follow-up. These examples may be caused by normal anatomical variation, contrast differences, positioning, or image artifacts that resemble disease-related opacity.
+
+![False positive case where a Normal chest X-ray was predicted as Pneumonia, with heatmaps showing model focus that may reflect non-pathological opacity or imaging variation](reports/figures/failure_cases/false_positive_2_NORMAL_pred_PNEUMONIA.png)
+
+![Second false positive case where a Normal chest X-ray was predicted as Pneumonia, highlighting a model attention pattern that could lead to unnecessary follow-up](reports/figures/failure_cases/false_positive_3_NORMAL_pred_PNEUMONIA.png)
+
+### Failure Summary
+
+- **False negatives:** 12 Pneumonia images were predicted as Normal.
+- **False positives:** 48 Normal images were predicted as Pneumonia.
+- The model prioritizes Pneumonia sensitivity, which is appropriate for a screening-style objective, but the false positive rate should be reduced before any real-world deployment.
+- CAM explanations are useful for auditing model behavior, but they do not prove clinical correctness.
+
+---
+
+## Methodology
+
+### Dataset
+
+This project uses the Kaggle Chest X-Ray Pneumonia dataset, based on pediatric chest radiographs from Guangzhou Women and Children's Medical Center.
+
+Expected dataset layout:
+
+```text
 data/raw/chest_xray/
 ├── train/
 │   ├── NORMAL/
@@ -86,169 +155,131 @@ data/raw/chest_xray/
     └── PNEUMONIA/
 ```
 
-### 3. Train
+### Preprocessing
+
+- Convert grayscale X-rays to 3-channel RGB
+- Resize images to `224 x 224`
+- Apply ImageNet normalization for transfer learning
+- Apply training-only augmentation: horizontal flip, small rotation, brightness/contrast jitter
+
+### Model
+
+ResNet50 was selected because it provides strong transfer-learning performance, stable training behavior, and a clear final convolutional block for CAM visualization.
+
+Training strategy:
+
+1. Train classifier head with the backbone frozen.
+2. Fine-tune later ResNet layers after initial convergence.
+3. Save the best checkpoint by validation F1-score.
+
+### Class Imbalance
+
+The dataset is imbalanced toward Pneumonia. The training pipeline uses:
+
+- Weighted random sampling to expose the model to more Normal cases.
+- Weighted cross-entropy to penalize minority-class mistakes.
+- PR-AUC and F1-score to evaluate beyond accuracy.
+
+---
+
+## Quick Start
+
+### 1. Clone and install
 
 ```bash
-python -m src.train --data-root data/raw/chest_xray --backbone resnet50 --epochs 15
+git clone https://github.com/bachnguyennn/Chest_X-Pneumonia-Detection.git
+cd Chest_X-Pneumonia-Detection
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### 4. Evaluate + generate heatmaps
+### 2. Pull the saved checkpoint with Git LFS
+
+```bash
+git lfs install
+git lfs pull
+```
+
+### 3. Download the dataset
+
+```bash
+pip install kaggle
+python scripts/download_dataset.py
+```
+
+### 4. Evaluate the saved model
 
 ```bash
 python -m src.evaluate --checkpoint models/best_resnet50.pth --data-root data/raw/chest_xray
 ```
 
-### 5. Interactive demo (optional)
-
-```bash
-python demo_app.py
-```
-
-### 6. Full narrative notebook
+### 5. Open the final report notebook
 
 ```bash
 jupyter notebook notebook/chest_xray_report.ipynb
 ```
 
-### 7. Train on Google Colab (free cloud GPU)
-
-1. Open [Google Colab](https://colab.research.google.com/)
-2. **File → Upload notebook** → select `notebook/chest_xray_colab.ipynb`
-3. **Runtime → Change runtime type → GPU** (T4)
-4. Run all cells (mount Drive, upload project zip or use Drive copy, Kaggle token, train)
-
-The Colab notebook saves the dataset and models to **Google Drive** so you don't re-download each session. See `notebook/chest_xray_colab.ipynb` for step-by-step cells.
-
----
-
-## Methodology
-
-### Why ResNet50?
-
-ResNet50 offers an excellent balance of **accuracy**, **training speed**, and **well-understood CAM target layers** (`layer4`). ImageNet pretraining transfers well to chest X-ray texture patterns.
-
-### Class imbalance (~25% Normal, ~75% Pneumonia)
-
-| Strategy | Rationale |
-|----------|-----------|
-| Weighted Random Sampler | Ensures Normal cases appear equally often during training |
-| Weighted Cross-Entropy | Higher penalty for misclassifying the minority class |
-| F1 / PR-AUC metrics | Accuracy is misleading on imbalanced medical data |
-
-### Preprocessing
-
-- Grayscale X-rays converted to **3-channel RGB**
-- Resize to **224×224**
-- **ImageNet normalization** (mean/std) — standard for transfer learning
-
-### Fine-tuning schedule
-
-1. **Epochs 1–4:** Frozen backbone, train classifier head only
-2. **Epochs 5–15:** Unfreeze `layer4`, fine-tune with 10× lower learning rate
-3. **Checkpoint:** Best model saved by **validation F1** (Pneumonia class)
-
-### Explainability
-
-| Method | How it works | Strength |
-|--------|--------------|----------|
-| **Grad-CAM** | Gradients × activations for target class | Class-discriminative, widely used |
-| **Eigen-CAM** | 1st principal component of activations | Often **cleaner**, less noisy on lung tissue |
-
 ---
 
 ## Project Structure
 
-```
-chest_xray_pneumonia_detection/
+```text
+Chest_X-Pneumonia-Detection/
 ├── data/
-│   ├── raw/                  # Kaggle dataset (not in git)
+│   ├── raw/                  # Kaggle dataset, not committed
 │   └── processed/
-├── src/
-│   ├── dataset.py            # Dataset, transforms, samplers
-│   ├── model.py              # ResNet50, EfficientNet-B0
-│   ├── train.py              # Training loop
-│   ├── evaluate.py           # Metrics + visualizations
-│   └── cam.py                # Grad-CAM + Eigen-CAM
+├── models/
+│   ├── best_resnet50.pth     # Saved checkpoint, tracked with Git LFS
+│   └── history_resnet50.json
 ├── notebook/
 │   └── chest_xray_report.ipynb
 ├── reports/
-│   └── figures/              # Heatmaps, curves, confusion matrix
-├── models/                   # Saved checkpoints
+│   └── figures/              # Curves, confusion matrix, CAMs, failure cases
 ├── scripts/
 │   └── download_dataset.py
-├── demo_app.py               # Gradio demo
+├── src/
+│   ├── cam.py                # Grad-CAM and Eigen-CAM
+│   ├── dataset.py            # Dataset, transforms, weighted sampler
+│   ├── evaluate.py           # Metrics and report figures
+│   ├── model.py              # ResNet50 and EfficientNet-B0 builders
+│   └── train.py              # Training loop
+├── demo_app.py
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Results (Template)
-
-*Fill in after running evaluation on your machine:*
-
-| Metric | Value |
-|--------|-------|
-| Test Accuracy | — |
-| Pneumonia F1 | — |
-| Pneumonia Precision | — |
-| Pneumonia Recall | — |
-| PR-AUC | — |
-| ROC-AUC | — |
-
-```bash
-# View saved metrics
-cat reports/figures/test_metrics.json
-```
-
----
-
-## Failure Case Analysis
-
-After evaluation, inspect:
-
-- **`reports/figures/failure_cases/false_negative_*`** — Pneumonia missed (critical clinically)
-- **`reports/figures/failure_cases/false_positive_*`** — Normal flagged as Pneumonia
-
-Common failure modes:
-- Subtle or early-stage infiltrates
-- Other opacities (atelectasis, pleural effusion) confused with consolidation
-- Image quality / positioning artifacts
-
----
-
 ## Limitations
 
-1. **Dataset bias** — Pediatric patients, single hospital (Guangzhou)
-2. **Binary classification** — Bacterial and viral pneumonia combined
-3. **No calibration** — Raw softmax scores are not clinical probabilities
-4. **No prospective validation** — Benchmark performance ≠ real-world deployment
-5. **Regulatory** — Not a medical device; not for diagnostic use
-
----
-
-## Compare Backbones (Optional)
-
-```bash
-python -m src.train --backbone efficientnet_b0 --epochs 15
-python -m src.evaluate --checkpoint models/best_efficientnet_b0.pth
-```
+1. **Dataset bias:** The dataset is pediatric and comes from a limited clinical setting.
+2. **Binary labels:** Pneumonia is not separated into bacterial, viral, or other subtypes.
+3. **No external validation:** Results are from the Kaggle test split only.
+4. **Calibration not performed:** Softmax confidence should not be interpreted as clinical probability.
+5. **Explainability is approximate:** CAMs show model attention, not causal medical evidence.
+6. **Not clinical software:** This is not a regulated medical device.
 
 ---
 
 ## Tech Stack
 
-- Python 3.10+, PyTorch, torchvision, timm
-- pytorch-grad-cam, scikit-learn, matplotlib, seaborn
-- Jupyter, Gradio (demo)
+- Python 3.10+
+- PyTorch and torchvision
+- scikit-learn
+- pytorch-grad-cam
+- matplotlib and seaborn
+- Jupyter
+- Gradio demo
 
 ---
 
 ## License
 
-MIT License — see [LICENSE](LICENSE).
+MIT License. See [LICENSE](LICENSE).
 
-Dataset: [Kaggle Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia) — review Kaggle terms before use.
+Dataset: [Kaggle Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia). Review Kaggle terms before use.
 
 ---
 
