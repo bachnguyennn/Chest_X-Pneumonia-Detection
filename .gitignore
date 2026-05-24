@@ -1,0 +1,44 @@
+# Data (large — download separately)
+data/raw/
+data/processed/
+
+# Model weights
+models/*.pth
+models/*.pt
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Reports (regenerate locally; keep structure)
+reports/figures/*.png
+reports/figures/*.jpg
+!reports/figures/.gitkeep
+
+# Kaggle
+.kaggle/
+*.zip
+
+# Logs
+logs/
+*.log
+wandb/
