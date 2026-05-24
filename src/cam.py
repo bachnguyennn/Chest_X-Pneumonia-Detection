@@ -31,6 +31,29 @@ def _tensor_to_rgb_uint8(tensor: torch.Tensor) -> np.ndarray:
     return img.astype(np.float32)
 
 
+def _resize_cam_to_image(heatmap: np.ndarray, image_shape: tuple[int, ...]) -> np.ndarray:
+    """Resize and normalize a CAM heatmap to match an RGB image."""
+    target_h, target_w = image_shape[:2]
+    heatmap = np.asarray(heatmap, dtype=np.float32)
+
+    if heatmap.ndim == 3:
+        heatmap = heatmap.squeeze()
+    if heatmap.ndim != 2:
+        raise ValueError(f"Expected 2D CAM heatmap, got shape {heatmap.shape}")
+
+    if heatmap.shape != (target_h, target_w):
+        heatmap_img = Image.fromarray(heatmap)
+        heatmap_img = heatmap_img.resize((target_w, target_h), resample=Image.BILINEAR)
+        heatmap = np.asarray(heatmap_img, dtype=np.float32)
+
+    heatmap = heatmap - heatmap.min()
+    max_value = heatmap.max()
+    if max_value > 0:
+        heatmap = heatmap / max_value
+
+    return heatmap.astype(np.float32)
+
+
 class EigenCAM:
     """
     Eigen-CAM: projects activations onto the first principal component.
@@ -138,6 +161,7 @@ def overlay_heatmap(
     alpha: float = 0.5,
 ) -> np.ndarray:
     """Overlay heatmap on RGB image using grad-cam utilities."""
+    heatmap = _resize_cam_to_image(heatmap, rgb_image.shape)
     return show_cam_on_image(rgb_image, heatmap, use_rgb=True, image_weight=alpha)
 
 
