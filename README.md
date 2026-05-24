@@ -109,19 +109,27 @@ Grad-CAM highlights class-discriminative regions using gradients, while Eigen-CA
 
 Failure cases are the most important examples to inspect in medical AI because they reveal where the model is likely to be unreliable.
 
-### False Negatives: Pneumonia Missed as Normal
+### Case 1: False Negative — Pneumonia Missed as Normal
 
-False negatives are clinically important because they represent pneumonia cases the model failed to flag. These examples may involve subtle opacities, mild disease presentation, overlapping anatomy, or image characteristics that make consolidation harder to distinguish.
+False negatives are clinically important because they represent pneumonia cases the model failed to flag. In this example, the CAM overlays suggest the model did not assign enough weight to the subtle abnormal regions and produced a Normal prediction. This kind of miss can happen when pneumonia findings are mild, spatially diffuse, or visually close to normal lung texture.
 
 ![False negative case where a pneumonia-positive chest X-ray was predicted as Normal, with Grad-CAM and Eigen-CAM overlays showing the model attention pattern behind the missed diagnosis](reports/figures/failure_cases/false_negative_0_PNEUMONIA_pred_NORMAL.png)
 
+### Case 2: False Negative — Second Missed Pneumonia Example
+
+This second false negative shows another pneumonia-positive image classified as Normal. The likely failure mode is under-sensitivity to weak or localized opacity: the model may focus on broader thoracic structure while failing to treat the suspicious region as strong enough evidence for Pneumonia.
+
 ![Second false negative case where a pneumonia-positive chest X-ray was predicted as Normal, illustrating a missed pneumonia example for model reliability review](reports/figures/failure_cases/false_negative_1_PNEUMONIA_pred_NORMAL.png)
 
-### False Positives: Normal Misclassified as Pneumonia
+### Case 3: False Positive — Normal Misclassified as Pneumonia
 
-False positives are less dangerous than false negatives in a screening context, but they can increase unnecessary follow-up. These examples may be caused by normal anatomical variation, contrast differences, positioning, or image artifacts that resemble disease-related opacity.
+False positives are less dangerous than false negatives in a screening context, but they can increase unnecessary follow-up. In this Normal case, the heatmaps suggest the model focused on image regions that may resemble opacity or consolidation despite the ground-truth Normal label. This can happen because normal anatomical variation, contrast differences, positioning, or acquisition artifacts can look similar to disease cues learned during training.
 
 ![False positive case where a Normal chest X-ray was predicted as Pneumonia, with heatmaps showing model focus that may reflect non-pathological opacity or imaging variation](reports/figures/failure_cases/false_positive_2_NORMAL_pred_PNEUMONIA.png)
+
+### Case 4: False Positive — Second Normal Image Flagged as Pneumonia
+
+This second false positive highlights the model's screening-oriented tradeoff: it is sensitive to suspicious visual patterns, but some of those patterns occur in Normal images. The case reinforces why threshold tuning, probability calibration, and external validation would be necessary before any clinical workflow.
 
 ![Second false positive case where a Normal chest X-ray was predicted as Pneumonia, highlighting a model attention pattern that could lead to unnecessary follow-up](reports/figures/failure_cases/false_positive_3_NORMAL_pred_PNEUMONIA.png)
 
