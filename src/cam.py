@@ -100,6 +100,7 @@ def generate_gradcam(
 
     targets = [ClassifierOutputTarget(target_class)]
     with torch.enable_grad():
+        input_tensor = input_tensor.detach().clone().requires_grad_(True)
         grayscale_cam = cam(
             input_tensor=input_tensor,
             targets=targets,
