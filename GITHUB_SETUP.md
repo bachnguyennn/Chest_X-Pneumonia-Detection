@@ -16,16 +16,15 @@ Train on a free GPU by cloning this repo in Colab — **no Google Drive mount ne
 
 ## Step 2: Push code from your Mac
 
-Replace `YOUR_USERNAME` with your GitHub username, then run in Terminal:
+Your repo: **https://github.com/bachnguyennn/Chest_X-Pneumonia-Detection**
 
 ```bash
 cd "/Users/Bach/Documents/OTU WINTER 2026/Project 3/Chext_X Pneumonia detection/chest_xray_pneumonia_detection"
 
-git init
 git add .
 git commit -m "Initial commit: pneumonia detection with Grad-CAM and Eigen-CAM"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/chest_xray_pneumonia_detection.git
+git remote add origin https://github.com/bachnguyennn/Chest_X-Pneumonia-Detection.git
 git push -u origin main
 ```
 
@@ -39,11 +38,10 @@ If `git init` says "already initialized", skip that line.
 
 1. Open [colab.research.google.com](https://colab.research.google.com)
 2. **File → Open notebook → GitHub**
-3. Paste: `YOUR_USERNAME/chest_xray_pneumonia_detection`
+3. Paste: `bachnguyennn/Chest_X-Pneumonia-Detection`
 4. Open `notebook/chest_xray_github_colab.ipynb`
 5. **Runtime → Change runtime type → GPU**
-6. Edit cell 2: set `GITHUB_USER = "YOUR_USERNAME"`
-7. Run all cells
+6. Run all cells (repo URL is pre-configured)
 
 **Cursor + Colab extension:**
 

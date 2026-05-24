@@ -48,7 +48,7 @@ Each CAM comparison shows three panels side-by-side:
 
 ### Option A — GitHub + Colab GPU (recommended)
 
-No Google Drive needed for code. See **[GITHUB_SETUP.md](GITHUB_SETUP.md)** for push instructions, then open **`notebook/chest_xray_github_colab.ipynb`** on [Colab](https://colab.research.google.com) with a GPU runtime.
+No Google Drive needed for code. Open **`notebook/chest_xray_github_colab.ipynb`** on [Colab](https://colab.research.google.com) with a GPU runtime. Repo: [bachnguyennn/Chest_X-Pneumonia-Detection](https://github.com/bachnguyennn/Chest_X-Pneumonia-Detection).
 
 ### Option B — Local
 
