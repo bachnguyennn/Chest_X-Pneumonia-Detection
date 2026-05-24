@@ -99,12 +99,23 @@ def generate_gradcam(
     cam = GradCAM(model=model, target_layers=[target_layer])
 
     targets = [ClassifierOutputTarget(target_class)]
-    with torch.enable_grad():
-        input_tensor = input_tensor.detach().clone().requires_grad_(True)
-        grayscale_cam = cam(
-            input_tensor=input_tensor,
-            targets=targets,
-        )
+    original_requires_grad = {
+        param: param.requires_grad for param in target_layer.parameters()
+    }
+    try:
+        for param in target_layer.parameters():
+            param.requires_grad_(True)
+
+        with torch.enable_grad():
+            input_tensor = input_tensor.detach().clone().requires_grad_(True)
+            grayscale_cam = cam(
+                input_tensor=input_tensor,
+                targets=targets,
+            )
+    finally:
+        for param, requires_grad in original_requires_grad.items():
+            param.requires_grad_(requires_grad)
+
     return grayscale_cam[0]
 
 
